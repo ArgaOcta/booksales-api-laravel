@@ -2,17 +2,17 @@
 
 namespace App\Models;
 
-class Genre
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Genre extends Model
 {
-    public static function all(): array
+    protected $fillable = [
+        'name',
+    ];
+
+    public function books(): HasMany
     {
-        return [
-            ['id' => 1, 'name' => 'Fiksi'],
-            ['id' => 2, 'name' => 'Nonfiksi'],
-            ['id' => 3, 'name' => 'Romance'],
-            ['id' => 4, 'name' => 'Misteri'],
-            ['id' => 5, 'name' => 'Fantasi'],
-        ];
+        return $this->hasMany(Book::class);
     }
 }
-

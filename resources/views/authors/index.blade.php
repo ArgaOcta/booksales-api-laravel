@@ -3,26 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Author</title>
+    <title>Daftar Penulis</title>
 </head>
 <body>
-    <h1>Daftar Penulis Buku</h1>
+    <h1>Daftar Penulis</h1>
 
-    <table border="1" cellpadding="10" cellspacing="0">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nama Penulis</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($authors as $author)
-                <tr>
-                    <td>{{ $author['id'] }}</td>
-                    <td>{{ $author['name'] }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
+    <nav>
+        <a href="{{ route('books.index') }}">Buku</a> |
+        <a href="{{ route('authors.index') }}">Penulis</a> |
+        <a href="{{ route('genres.index') }}">Genre</a>
+    </nav>
+
+    <hr>
+
+    @forelse ($authors as $author)
+        <article>
+            <h2>{{ $author->name }}</h2>
+            <p>{{ $author->bio ?? 'Belum ada biografi.' }}</p>
+
+            <h3>Buku:</h3>
+            @forelse ($author->books as $book)
+                <p>{{ $book->title }}</p>
+            @empty
+                <p>Belum ada buku.</p>
+            @endforelse
+        </article>
+        <hr>
+    @empty
+        <p>Belum ada data penulis.</p>
+    @endforelse
 </body>
 </html>

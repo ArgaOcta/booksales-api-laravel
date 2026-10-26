@@ -3,13 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Genre;
-use Illuminate\View\View;
 
 class GenreController extends Controller
 {
-    public function index(): View
+    public function index()
     {
-        $genres = Genre::all();
+        $genres = Genre::with('books')->get();
 
         return view('genres.index', compact('genres'));
     }

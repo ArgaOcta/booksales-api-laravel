@@ -3,13 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Author;
-use Illuminate\View\View;
 
 class AuthorController extends Controller
 {
-    public function index(): View
+    public function index()
     {
-        $authors = Author::all();
+        $authors = Author::with('books')->get();
 
         return view('authors.index', compact('authors'));
     }
