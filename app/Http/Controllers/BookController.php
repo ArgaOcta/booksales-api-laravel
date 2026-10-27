@@ -10,6 +10,10 @@ class BookController extends Controller
     {
         $books = Book::with(['author', 'genre'])->get();
 
-        return view('books.index', compact('books'));
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar buku berhasil diambil.',
+            'data' => $books
+        ], 200);
     }
 }

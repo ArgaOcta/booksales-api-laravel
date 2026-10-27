@@ -10,6 +10,10 @@ class GenreController extends Controller
     {
         $genres = Genre::with('books')->get();
 
-        return view('genres.index', compact('genres'));
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar genre berhasil diambil.',
+            'data' => $genres
+        ], 200);
     }
 }
