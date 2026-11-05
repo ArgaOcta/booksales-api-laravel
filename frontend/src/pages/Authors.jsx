@@ -3,7 +3,16 @@ import api from "../services/api";
 
 export default function Authors() {
   const [authors, setAuthors] = useState([]);
+
   const [form, setForm] = useState({
+    name: "",
+    photo: "",
+    bio: "",
+  });
+
+  const [editingId, setEditingId] = useState(null);
+
+  const [editForm, setEditForm] = useState({
     name: "",
     photo: "",
     bio: "",
@@ -11,6 +20,7 @@ export default function Authors() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -37,7 +47,7 @@ export default function Authors() {
     fetchAuthors();
   }, []);
 
-  // Menangani perubahan input form
+  // Menangani perubahan input form tambah
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -85,6 +95,109 @@ export default function Authors() {
     }
   };
 
+  // Memulai proses edit author
+  const handleEdit = (author) => {
+    setEditingId(author.id);
+
+    setEditForm({
+      name: author.name || "",
+      photo: author.photo || "",
+      bio: author.bio || "",
+    });
+
+    setError("");
+    setSuccess("");
+  };
+
+  // Menangani perubahan input edit
+  const handleEditChange = (e) => {
+    setEditForm({
+      ...editForm,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  // Update Author menggunakan Axios PUT
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    if (!editForm.name.trim()) {
+      setError("Nama author wajib diisi.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError("");
+      setSuccess("");
+
+      const response = await api.put(`/authors/${editingId}`, {
+        name: editForm.name.trim(),
+        photo: editForm.photo.trim() || null,
+        bio: editForm.bio.trim() || null,
+      });
+
+      setSuccess(
+        response.data?.message || "Author berhasil diperbarui."
+      );
+
+      setEditingId(null);
+
+      setEditForm({
+        name: "",
+        photo: "",
+        bio: "",
+      });
+
+      await fetchAuthors();
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Gagal memperbarui author."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Delete Author menggunakan Axios DELETE
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm(
+      "Apakah kamu yakin ingin menghapus author ini?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(id);
+      setError("");
+      setSuccess("");
+
+      const response = await api.delete(`/authors/${id}`);
+
+      setSuccess(
+        response.data?.message || "Author berhasil dihapus."
+      );
+
+      if (editingId === id) {
+        setEditingId(null);
+
+        setEditForm({
+          name: "",
+          photo: "",
+          bio: "",
+        });
+      }
+
+      await fetchAuthors();
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Gagal menghapus author."
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
 
@@ -102,6 +215,19 @@ export default function Authors() {
           Kelola informasi penulis buku pada Booksales.
         </p>
       </div>
+
+      {/* Notifikasi */}
+      {error && (
+        <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="text-sm text-green-700 bg-green-50 border border-green-200 p-3 rounded-lg">
+          {success}
+        </div>
+      )}
 
       {/* Form Create */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
@@ -164,19 +290,91 @@ export default function Authors() {
             {submitting ? "Menyimpan..." : "+ Tambah Author"}
           </button>
         </form>
-
-        {error && (
-          <p className="mt-4 text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-            {error}
-          </p>
-        )}
-
-        {success && (
-          <p className="mt-4 text-sm text-green-700 bg-green-50 p-3 rounded-lg">
-            {success}
-          </p>
-        )}
       </div>
+
+      {/* Form Edit */}
+      {editingId !== null && (
+        <div className="bg-indigo-50 rounded-2xl border border-indigo-200 p-6">
+          <h2 className="text-lg font-bold text-slate-800 mb-5">
+            Edit Author #{editingId}
+          </h2>
+
+          <form onSubmit={handleUpdate} className="space-y-4">
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Nama Author
+              </label>
+
+              <input
+                type="text"
+                name="name"
+                value={editForm.name}
+                onChange={handleEditChange}
+                placeholder="Masukkan nama author..."
+                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Foto Author (URL)
+              </label>
+
+              <input
+                type="url"
+                name="photo"
+                value={editForm.photo}
+                onChange={handleEditChange}
+                placeholder="https://example.com/photo.jpg"
+                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Biografi
+              </label>
+
+              <textarea
+                name="bio"
+                value={editForm.bio}
+                onChange={handleEditChange}
+                rows="3"
+                placeholder="Masukkan biografi author..."
+                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-semibold rounded-xl px-6 py-3 text-sm"
+              >
+                {submitting ? "Menyimpan..." : "Simpan Perubahan"}
+              </button>
+
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => {
+                  setEditingId(null);
+                  setEditForm({
+                    name: "",
+                    photo: "",
+                    bio: "",
+                  });
+                }}
+                className="bg-slate-200 hover:bg-slate-300 disabled:opacity-50 text-slate-700 font-semibold rounded-xl px-6 py-3 text-sm"
+              >
+                Batal
+              </button>
+            </div>
+
+          </form>
+        </div>
+      )}
 
       {/* Tabel Author */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -194,7 +392,8 @@ export default function Authors() {
 
           <button
             onClick={fetchAuthors}
-            className="text-sm text-indigo-600 hover:text-indigo-800 font-semibold"
+            disabled={loading}
+            className="text-sm text-indigo-600 hover:text-indigo-800 font-semibold disabled:opacity-50"
           >
             ↻ Refresh
           </button>
@@ -208,13 +407,14 @@ export default function Authors() {
                 <th className="px-6 py-4">Author</th>
                 <th className="px-6 py-4">Biografi</th>
                 <th className="px-6 py-4">ID</th>
+                <th className="px-6 py-4">Aksi</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="text-center py-8 text-slate-400">
+                  <td colSpan="5" className="text-center py-8 text-slate-400">
                     Memuat data author...
                   </td>
                 </tr>
@@ -252,11 +452,31 @@ export default function Authors() {
                     <td className="px-6 py-4 text-slate-500">
                       #{author.id}
                     </td>
+
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(author)}
+                          disabled={deletingId !== null}
+                          className="bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 px-3 py-2 rounded-lg font-semibold"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(author.id)}
+                          disabled={deletingId !== null}
+                          className="bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 px-3 py-2 rounded-lg font-semibold"
+                        >
+                          {deletingId === author.id ? "Menghapus..." : "Hapus"}
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="text-center py-8 text-slate-400">
+                  <td colSpan="5" className="text-center py-8 text-slate-400">
                     Belum ada data author.
                   </td>
                 </tr>
