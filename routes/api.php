@@ -5,6 +5,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\RegisterController;
 
 // Books - Public
 Route::get('/books', [BookController::class, 'index']);
@@ -43,3 +44,5 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         ->only(['index', 'destroy']);
 
 });
+
+Route::post('/register', [RegisterController::class, 'register']);
