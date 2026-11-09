@@ -1,34 +1,17 @@
-import { useEffect, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function AdminLayout() {
-  const [token, setToken] = useState("");
-  const [tokenSaved, setTokenSaved] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem("admin_token");
-
-    if (savedToken) {
-      setToken(savedToken);
-      setTokenSaved(true);
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      alert("Logout gagal. Silakan coba lagi.");
     }
-  }, []);
-
-  const handleSaveToken = (e) => {
-    e.preventDefault();
-
-    if (!token.trim()) return;
-
-    localStorage.setItem("admin_token", token.trim());
-    setTokenSaved(true);
-
-    alert("Token Admin berhasil disimpan!");
-  };
-
-  const handleRemoveToken = () => {
-    localStorage.removeItem("admin_token");
-    setToken("");
-    setTokenSaved(false);
   };
 
   const menuClass = ({ isActive }) =>
@@ -40,7 +23,6 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-slate-100">
-      {/* Sidebar */}
       <aside className="w-full md:fixed md:inset-y-0 md:left-0 md:w-64 bg-white border-r border-slate-200 z-20">
         <div className="p-6 border-b border-slate-100">
           <h1 className="text-2xl font-extrabold text-indigo-700">
@@ -81,7 +63,6 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="md:ml-64 min-h-screen">
         <header className="bg-white border-b border-slate-200 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -89,40 +70,16 @@ export default function AdminLayout() {
               BookSales Admin
             </h2>
             <p className="text-xs text-slate-400">
-              Manage genres and authors
+              Login sebagai {user?.name} ({user?.role})
             </p>
           </div>
 
-          {/* Admin Token */}
-          <form onSubmit={handleSaveToken} className="flex flex-wrap gap-2">
-            <input
-              type="password"
-              value={token}
-              onChange={(e) => {
-                setToken(e.target.value);
-                setTokenSaved(false);
-              }}
-              placeholder="Masukkan token Admin"
-              className="w-52 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-            />
-
-            <button
-              type="submit"
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-            >
-              Simpan
-            </button>
-
-            {tokenSaved && (
-              <button
-                type="button"
-                onClick={handleRemoveToken}
-                className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-100"
-              >
-                Hapus Token
-              </button>
-            )}
-          </form>
+          <button
+            onClick={handleLogout}
+            className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 transition"
+          >
+            Logout
+          </button>
         </header>
 
         <div className="p-4 sm:p-6 lg:p-8">

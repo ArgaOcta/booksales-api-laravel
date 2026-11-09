@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "../services/api";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -12,6 +13,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState("");
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({
@@ -63,16 +66,20 @@ export default function Register() {
         password: form.password,
       });
 
-      setSuccess(
-        response.data?.message || "Registrasi berhasil!"
-      );
+    setSuccess(
+      response.data?.message || "Registrasi berhasil! Mengalihkan ke halaman login..."
+    );
 
-      setForm({
-        name: "",
-        email: "",
-        username: "",
-        password: "",
-      });
+    setForm({
+      name: "",
+      email: "",
+      username: "",
+      password: "",
+    });
+
+    setTimeout(() => {
+      navigate("/login");
+    }, 1500);
     } catch (err) {
       const serverErrors = err.response?.data?.errors;
 
